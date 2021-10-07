@@ -1,0 +1,23 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%runscript
+	echo "Arguments received: $*"
+	echo "$@"
+	echo "Executing python3 $1"
+	exec python3 $1
+
+%environment
+    VARIABLE=MEATBALLVALUE
+    export VARIABLE
+
+%labels
+   AUTHOR janecektyler@gmail.com
+
+%post
+	apt-get update
+	apt-get install -y python3-pip -y
+	python3 -m pip install .
+
+%help
+	This container is a singularity wrapper on the DiffusionModel python helper for JAGS models
