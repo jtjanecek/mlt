@@ -1,3 +1,4 @@
 pandas_profiling
 pandas
 sklearn
+auto-sklearn

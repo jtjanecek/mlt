@@ -19,7 +19,7 @@ parser.add_argument('--type', help='Classification or regression', choices=['c',
 parser.add_argument('--input', help='CSV input', required=True)
 parser.add_argument('--outcome', help='Outcome variable in the CSV', required=True)
 parser.add_argument('--out', help='Output directory', default='.')
-parser.add_argument('--timeout', help='Timeout for AutoML fitting in minutes', default=20)
+parser.add_argument('--timeout', help='Timeout for AutoML fitting in minutes', default=10)
 parser.add_argument('--name', help='Name of the model to use as prefixes', default=None)
 parser.add_argument('--random_state', help='Random state for reproducibility', default=50)
 parser.add_argument('--n_cores', help='Number of CPUs to use. Use -1 for all cores', default=1)
