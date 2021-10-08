@@ -46,7 +46,7 @@ class Classifier:
 
 		self._rf_importance()
 		self._lg_importance()
-		self._auto()
+		#self._auto()
 
 
 	def _rf_importance(self):
@@ -94,6 +94,7 @@ class Classifier:
 		basic_stats_df = pd.DataFrame({'decision_threshold': [.5], 'tn': [tn], 'fp': [fp],
 			'fn': [fn], 'tp': [tp], 'roc_auc': [auc], 'precision': [precision],
 			'recall': [recall]})
+
 		basic_stats_df.to_csv(f'{self._name}_rf_loo_stats.csv', index=False)
 
 		
@@ -150,6 +151,8 @@ class Classifier:
                         'fn': [fn], 'tp': [tp], 'roc_auc': [auc], 'precision': [precision],
                         'recall': [recall]})
 		basic_stats_df.to_csv(f'{self._name}_lg_loo_stats.csv', index=False)
+
+		# Single feature per LG
 
 
 	def _auto(self):

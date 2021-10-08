@@ -2,7 +2,8 @@ Bootstrap: docker
 From: ubuntu:20.04
 
 %files
-	* /opt/
+	*.py /opt/
+	*.txt /opt/
 
 %runscript
 	cd /opt
@@ -12,6 +13,8 @@ From: ubuntu:20.04
    AUTHOR janecektyler@gmail.com
 
 %post
+	mkdir /data
+	mkdir /output
 	apt-get update
 	apt-get install -y python3-pip -y
 	cd /opt

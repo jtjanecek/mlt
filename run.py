@@ -1,3 +1,6 @@
+with open('/output/test.txt', 'w+') as f:
+	f.write("HELLO!")
+
 import logging
 logger = logging.getLogger('mlt')
 logger.setLevel(logging.DEBUG)
@@ -44,7 +47,7 @@ df = df[~df.isna().any(axis=1)]
 assert os.path.isdir(cli_args.out)
 os.chdir(cli_args.out)
 
-name = csv.strip(".csv") if cli_args.name == None else cli_args.name
+name = os.path.basename(csv.strip(".csv")) if cli_args.name == None else cli_args.name
 
 df.reset_index(drop=True, inplace=True)
 
