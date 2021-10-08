@@ -1,6 +1,3 @@
-with open('/output/test.txt', 'w+') as f:
-	f.write("HELLO!")
-
 import logging
 logger = logging.getLogger('mlt')
 logger.setLevel(logging.DEBUG)
