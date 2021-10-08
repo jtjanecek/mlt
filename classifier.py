@@ -153,6 +153,60 @@ class Classifier:
 		basic_stats_df.to_csv(f'{self._name}_lg_loo_stats.csv', index=False)
 
 		# Single feature per LG
+		tns = []
+		fps = []
+		fns = []
+		tps = []
+		aucs = []
+		precisions = []
+		recalls = []
+		columns = self._columns
+
+		for idx, column in enumerate(self._columns):
+			this_X = self._X[:,idx]
+			ytrues = []
+			ypreds = []
+			for train_idx, test_idx in loo.split(this_X, self._y):
+				X_train, X_test = this_X[train_idx].reshape(-1, 1) , this_X[test_idx].reshape(-1, 1) 
+				y_train, y_test = self._y[train_idx], self._y[test_idx]
+	
+				model = LogisticRegression(random_state=self._random_state, n_jobs=self._n_cores, max_iter=max_iter)
+				model.fit(X_train, y_train)
+				positive_class_idx = list(model.classes_).index(1)
+				ypred = model.predict_proba(X_test)[:,positive_class_idx].flatten()
+					
+				ytrues.append(y_test)
+				ypreds.append(ypred)
+	
+			ytrues = np.array(ytrues).flatten()
+			ypreds = np.array(ypreds).flatten()
+		
+			ypred_binary = [0 if z < 0.5 else 1 for z in ypreds]
+			tn, fp, fn, tp = confusion_matrix(ytrues, ypred_binary).ravel()
+			auc = roc_auc_score(ytrues, ypreds)
+			precision = precision_score(ytrues, ypred_binary)
+			recall = recall_score(ytrues, ypred_binary)
+
+			tns.append(tn)
+			fps.append(fp)
+			fns.append(tn)
+			tps.append(tp)
+			aucs.append(auc)
+			precisions.append(precision)
+			recalls.append(recall)
+		
+		single_model_df = pd.DataFrame({
+			'feature': columns,
+			'tn': tns,
+			'fp': fps,
+			'fn': fns,
+			'tp': tps,
+			'roc_auc': aucs,
+			'precision': precisions,
+			'recall': recalls
+		})
+
+		single_model_df.to_csv(f'{self._name}_lg_loo_model_per_feature.csv', index=False)
 
 
 	def _auto(self):
