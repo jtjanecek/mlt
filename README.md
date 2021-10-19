@@ -1,5 +1,5 @@
 # Usage
-'''
+```
 usage: run.py [-h] --type {c,r} --input INPUT --outcome OUTCOME [--out OUT] [--timeout TIMEOUT] [--name NAME] [--random_state RANDOM_STATE] [--n_cores N_CORES]
               [--cv CV] [--cv_splits CV_SPLITS]
 
@@ -19,7 +19,7 @@ optional arguments:
   --cv CV               Cross validation metric to use. Default="LeaveOneOut()"                                                                                          
   --cv_splits CV_SPLITS                                                                                                                                                  
                         Number of splits for the CV to use. Not used for LOO CV
-'''
+```
 
 # Example singularity run
 ```
