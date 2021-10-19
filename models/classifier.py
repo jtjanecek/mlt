@@ -15,6 +15,8 @@ import numpy as np
 
 from models.utils import *
 
+from collections import defaultdict
+
 import pandas as pd
 import matplotlib as mpl
 mpl.rcParams['figure.dpi'] = 150
@@ -43,6 +45,8 @@ class Classifier:
 
 		if len(set(self._y)) != 2:
 			raise Exception(f"Found {len(set(self._y))} possible outcomes, but expected 2. Outcomes: {set(self._y)}")
+
+		self._master_stats = defaultdict(dict)
 
 		self._rf = RandomForestClassifier(random_state=self._random_state, n_jobs=self._n_cores)
 		self._lg = LogisticRegression(random_state=self._random_state, n_jobs=self._n_cores,     max_iter=10000)
@@ -77,19 +81,43 @@ class Classifier:
 		logger.info("Running CV ...")
 		rf_stats_cv = calc_stats_from_cv(self._lg, self._X_z, self._y, self._cv, self._thres)
 		rf_stats_cv.to_csv(f'{self._name}_rf_cv_stats.csv', index=False)
+		m, l_ci, h_ci = mean_confidence_interval(rf_stats_cv['roc_auc'])
+		self._master_stats['rf']['roc_auc_mean'] = m
+		self._master_stats['rf']['roc_auc_l_ci'] = l_ci
+		self._master_stats['rf']['roc_auc_h_ci'] = h_ci
 
 		lg_stats_cv = calc_stats_from_cv(self._lg, self._X_z, self._y, self._cv, self._thres)
 		lg_stats_cv.to_csv(f'{self._name}_lg_cv_stats.csv', index=False)
+		m, l_ci, h_ci = mean_confidence_interval(lg_stats_cv['roc_auc'])
+		self._master_stats['lg']['roc_auc_mean'] = m
+		self._master_stats['lg']['roc_auc_l_ci'] = l_ci
+		self._master_stats['lg']['roc_auc_h_ci'] = h_ci
+
+
 
 		## Single feature per model
 		logger.info("Running individual feature models ...")
 		rf_singles = calc_stats_per_feature(self._rf, self._X, self._y, self._cv, self._thres)
 		for i, column in enumerate(self._columns):
 			rf_singles[i].to_csv(f'{self._name}_rf___single_feat_stats_{column}.csv')
+			m, l_ci, h_ci = mean_confidence_interval(rf_singles[i]['roc_auc'])
+			self._master_stats[f'rf_{column}']['roc_auc_mean'] = m
+			self._master_stats[f'rf_{column}']['roc_auc_l_ci'] = l_ci
+			self._master_stats[f'rf_{column}']['roc_auc_h_ci'] = h_ci
 
 		lg_singles = calc_stats_per_feature(self._lg, self._X_z, self._y, self._cv, self._thres)
 		for i, column in enumerate(self._columns):
 			lg_singles[i].to_csv(f'{self._name}_lg___single_feat_stats_{column}.csv')
+			m, l_ci, h_ci = mean_confidence_interval(lg_singles[i]['roc_auc'])
+			self._master_stats[f'lg_{column}']['roc_auc_mean'] = m
+			self._master_stats[f'lg_{column}']['roc_auc_l_ci'] = l_ci
+			self._master_stats[f'lg_{column}']['roc_auc_h_ci'] = h_ci
 
+
+		## Save master stats
+		master_stats = pd.DataFrame(self._master_stats).T
+		master_stats = master_stats.sort_values(by=['roc_auc_mean'],ascending=False)
+		master_stats.to_csv(f'{self._name}_all_model_stats.csv')
+				
 
 

@@ -1,3 +1,4 @@
+import scipy
 import numpy as np
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import accuracy_score
@@ -73,4 +74,9 @@ def calc_stats_per_feature(model, X, y, cv, thres):
 	return results
 
 
-
+def mean_confidence_interval(data, confidence=0.95):
+	a = 1.0 * np.array(data)
+	n = len(a)
+	m, se = np.mean(a), scipy.stats.sem(a)
+	h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+	return m, m-h, m+h
