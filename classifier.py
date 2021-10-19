@@ -20,8 +20,6 @@ from scipy.stats import zscore
 import numpy as np
 
 
-from autosklearn.classification import AutoSklearnClassifier
-from autosklearn.experimental.askl2 import AutoSklearn2Classifier
 
 import pandas as pd
 import matplotlib as mpl
@@ -231,16 +229,3 @@ class Classifier:
 		})
 
 		single_model_df.to_csv(f'{self._name}_lg_cv_model_per_feature.csv', index=False)
-
-
-	def _auto(self):
-		logger.info("Running auto-sklearn ...")
-		automl = AutoSklearnClassifier(
-			time_left_for_this_task=120,
-			per_run_time_limit=30,
-			ensemble_size=1,
-			n_jobs = self._n_cores
-		)
-
-		automl.fit(self._X, self._y, dataset_name=self._name)
-		
