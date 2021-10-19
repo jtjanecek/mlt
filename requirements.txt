@@ -1,3 +1,2 @@
 pandas_profiling
-auto-sklearn
 xgboost
