@@ -152,7 +152,7 @@ class Classifier:
 		lg_df.to_csv(f'{self._name}_lg_coefficients.csv',index=False)
 		lg_pi_dict.to_csv(f'{self._name}_lg_permutation_importance.csv',index=False)
 
-		logger.info("Running LLO LG CV ...")
+		logger.info("Running LG CV ...")
 		positive_class_idx = list(model.classes_).index(1)
 		ytrues = []
 		ypreds = []

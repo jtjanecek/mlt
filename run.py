@@ -23,8 +23,8 @@ parser.add_argument('--timeout', help='Timeout for AutoML fitting in minutes', d
 parser.add_argument('--name', help='Name of the model to use as prefixes', default=None)
 parser.add_argument('--random_state', help='Random state for reproducibility', default=50)
 parser.add_argument('--n_cores', help='Number of CPUs to use. Use -1 for all cores', default=1)
-parser.add_argument('--cv', help='Cross validation metric to use. Default="LeaveOneOut()"', default="LeaveOneOut")
-parser.add_argument('--cv_splits', help='Number of splits for the CV to use. Not used for LOO CV', default=5)
+parser.add_argument('--cv', help='Cross validation metric to use. Default=LeaveOneOut', choices=['LeaveOneOut','StratifiedKFold'], default="LeaveOneOut")
+parser.add_argument('--cv_splits', help='Number of splits for the CV to use. Not used for LOO CV. Default=5', default=5)
 
 cli_args = parser.parse_args()
 print(cli_args)
