@@ -3,6 +3,7 @@ From: ubuntu:20.04
 
 %files
 	*.py /opt/
+	models /opt/
 	*.txt /opt/
 
 %runscript

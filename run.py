@@ -11,8 +11,8 @@ import pandas as pd
 import os
 import argparse
 
-from classifier import Classifier
-from profiler import Profiler
+from models.classifier import Classifier
+from models.profiler import Profiler
 
 parser = argparse.ArgumentParser(description='MLT')
 parser.add_argument('--type', help='Classification or regression', choices=['c','r'], required=True)
@@ -25,6 +25,8 @@ parser.add_argument('--random_state', help='Random state for reproducibility', d
 parser.add_argument('--n_cores', help='Number of CPUs to use. Use -1 for all cores', default=1)
 parser.add_argument('--cv', help='Cross validation metric to use. Default=LeaveOneOut', choices=['LeaveOneOut','StratifiedKFold'], default="LeaveOneOut")
 parser.add_argument('--cv_splits', help='Number of splits for the CV to use. Not used for LOO CV. Default=5', default=5)
+parser.add_argument('--decision_thres', help='The decision threshold to use for calculating statistics (not AUC). Default=0.5', default=0.5)
+
 
 cli_args = parser.parse_args()
 print(cli_args)
@@ -60,6 +62,6 @@ if not numeric_check:
 #Profiler(name, df)
 	
 if cli_args.type == 'c':
-	Classifier(name, df, cli_args.outcome, cli_args.timeout, cli_args.random_state, cli_args.n_cores, cli_args.cv, cli_args.cv_splits)
+	Classifier(name, df, cli_args.outcome, cli_args.timeout, cli_args.random_state, cli_args.n_cores, cli_args.cv, cli_args.cv_splits, cli_args.decision_thres)
 else:
 	assert 1 == 0
