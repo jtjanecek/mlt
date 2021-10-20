@@ -60,6 +60,7 @@ class Classifier:
 		coef = self._lg.coef_.flatten()
 		lg_coef_df = pd.DataFrame({'feature': self._columns, 'coefficient': coef})
 		lg_coef_df.to_csv(f'{self._name}_lg_coefficients.csv',index=False)
+		plot_importance(self._columns, coef, f'{self._name}_lg_coefficients')
 
 		### RF Gini impurity importance
 		logger.info("Calculating RF Gini Impurity Feature Importance ...")
@@ -67,6 +68,7 @@ class Classifier:
 		feature_importance = 100 * (self._rf.feature_importances_ / max(self._rf.feature_importances_))
 		rf_gi = pd.DataFrame({'feature': self._columns, 'gini_impurity_importance': feature_importance})
 		rf_gi.to_csv(f'{self._name}_rf_gini_importance.csv',index=False)
+		plot_importance(self._columns, feature_importance, f'{self._name}_rf_gini_importance')
 
 		### Permutation Importance
 		logger.info("Calculating permutation importance on training ...")
@@ -75,12 +77,14 @@ class Classifier:
 
 		lg_pi = calc_permutation_importance_training(self._lg, self._X_z, self._y, self._n_cores, 100, self._random_state, self._columns)
 		lg_pi.to_csv(f'{self._name}_lg_permutation_importance.csv',index=False)
+		plot_importance(self._columns, feature_importance, f'{self._name}_rf_gini_importance')
 
 
 		## CV 
 		logger.info("Running CV ...")
 		rf_stats_cv = calc_stats_from_cv(self._lg, self._X_z, self._y, self._cv, self._thres)
 		rf_stats_cv.to_csv(f'{self._name}_rf_cv_stats.csv', index=False)
+		plot_roc_auc(rf_stats_cv, f'{self._name}_rf_roc_auc')
 		m, l_ci, h_ci = mean_confidence_interval(rf_stats_cv['roc_auc'])
 		self._master_stats['rf']['roc_auc_mean'] = m
 		self._master_stats['rf']['roc_auc_l_ci'] = l_ci
@@ -88,18 +92,19 @@ class Classifier:
 
 		lg_stats_cv = calc_stats_from_cv(self._lg, self._X_z, self._y, self._cv, self._thres)
 		lg_stats_cv.to_csv(f'{self._name}_lg_cv_stats.csv', index=False)
+		plot_roc_auc(lg_stats_cv, f'{self._name}_lg_roc_auc')
 		m, l_ci, h_ci = mean_confidence_interval(lg_stats_cv['roc_auc'])
 		self._master_stats['lg']['roc_auc_mean'] = m
 		self._master_stats['lg']['roc_auc_l_ci'] = l_ci
 		self._master_stats['lg']['roc_auc_h_ci'] = h_ci
 
 
-
 		## Single feature per model
 		logger.info("Running individual feature models ...")
 		rf_singles = calc_stats_per_feature(self._rf, self._X, self._y, self._cv, self._thres)
 		for i, column in enumerate(self._columns):
-			rf_singles[i].to_csv(f'{self._name}_rf___single_feat_stats_{column}.csv')
+			rf_singles[i].to_csv(f'{self._name}_rf___stats_{column}.csv')
+			plot_roc_auc(rf_singles[i], f'{self._name}_rf___stats_{column}_roc_auc')
 			m, l_ci, h_ci = mean_confidence_interval(rf_singles[i]['roc_auc'])
 			self._master_stats[f'rf_{column}']['roc_auc_mean'] = m
 			self._master_stats[f'rf_{column}']['roc_auc_l_ci'] = l_ci
@@ -107,7 +112,8 @@ class Classifier:
 
 		lg_singles = calc_stats_per_feature(self._lg, self._X_z, self._y, self._cv, self._thres)
 		for i, column in enumerate(self._columns):
-			lg_singles[i].to_csv(f'{self._name}_lg___single_feat_stats_{column}.csv')
+			lg_singles[i].to_csv(f'{self._name}_lg___stats_{column}.csv')
+			plot_roc_auc(lg_singles[i], f'{self._name}_lg___stats_{column}_roc_auc')
 			m, l_ci, h_ci = mean_confidence_interval(lg_singles[i]['roc_auc'])
 			self._master_stats[f'lg_{column}']['roc_auc_mean'] = m
 			self._master_stats[f'lg_{column}']['roc_auc_l_ci'] = l_ci
