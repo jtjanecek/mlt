@@ -77,8 +77,7 @@ class Classifier:
 
 		lg_pi = calc_permutation_importance_training(self._lg, self._X_z, self._y, self._n_cores, 100, self._random_state, self._columns)
 		lg_pi.to_csv(f'{self._name}_lg_permutation_importance.csv',index=False)
-		plot_importance(self._columns, feature_importance, f'{self._name}_rf_gini_importance')
-
+		#plot_importance(self._columns, feature_importance, f'{self._name}_rf_gini_importance')
 
 		## CV 
 		logger.info("Running CV ...")
