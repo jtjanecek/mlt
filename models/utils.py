@@ -12,6 +12,7 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import roc_curve, auc, classification_report
 import pandas as pd
 
+from math import sqrt
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -62,6 +63,20 @@ def generate_df_from_cv_preds(ytrues, ypreds, thres):
 		ypreds_str.append(','.join([str(v) for v in cv_ypred]))
 
 	basic_stats_df = pd.DataFrame({'decision_threshold': [thres]*len(aucs), 'tn': tns, 'fp': fps, 'fn': fns, 'tp': tps, 'roc_auc': aucs, 'precision': precisions, 'recall': recalls, 'ytrues': ytrues_str, 'ypreds': ypreds_str})
+
+	basic_stats_df['ACC'] = (basic_stats_df['tn'] + basic_stats_df['tp']) / (basic_stats_df['tn'] + basic_stats_df['tp'] + basic_stats_df['fn'] + basic_stats_df['fp'])
+	basic_stats_df['Sensitivity'] = (basic_stats_df['tp']) / (basic_stats_df['tp'] + basic_stats_df['fn'])
+	basic_stats_df['Specificity'] = (basic_stats_df['tn']) / (basic_stats_df['tn'] + basic_stats_df['fp'])
+	basic_stats_df['FPR'] = (basic_stats_df['fp']) / (basic_stats_df['fp'] + basic_stats_df['tn'])
+	basic_stats_df['Positive Predictive Value'] = (basic_stats_df['tp']) / (basic_stats_df['tp'] + basic_stats_df['fp'])
+	basic_stats_df['Negative Predictive Value'] = (basic_stats_df['tn']) / (basic_stats_df['tn'] + basic_stats_df['fn'])
+
+	auc_mean = np.mean(basic_stats_df['roc_auc'].values.flatten())
+	auc_sd = np.std(basic_stats_df['roc_auc'].values.flatten())
+	samplesize = len(basic_stats_df['roc_auc'].values.flatten())
+	basic_stats_df['roc_auc_mean'] = auc_mean
+	basic_stats_df['roc_auc_lowci'] = auc_mean - 1.96 * (auc_sd/sqrt(samplesize))
+	basic_stats_df['roc_auc_highci'] = auc_mean + 1.96 * (auc_sd/sqrt(samplesize))
 
 	return basic_stats_df
 
