@@ -81,7 +81,7 @@ class Classifier:
 
 		## CV 
 		logger.info("Running CV ...")
-		rf_stats_cv = calc_stats_from_cv(self._lg, self._X_z, self._y, self._cv, self._thres)
+		rf_stats_cv = calc_stats_from_cv(self._rf, self._X, self._y, self._cv, self._thres)
 		rf_stats_cv.to_csv(f'{self._name}_rf_cv_stats.csv', index=False)
 		plot_roc_auc(rf_stats_cv, f'{self._name}_rf_roc_auc')
 		m, l_ci, h_ci = mean_confidence_interval(rf_stats_cv['roc_auc'])

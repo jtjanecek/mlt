@@ -10,6 +10,9 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import roc_curve, auc, classification_report
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+
+
 import pandas as pd
 
 from math import sqrt
@@ -80,6 +83,47 @@ def generate_df_from_cv_preds(ytrues, ypreds, thres):
 
 	return basic_stats_df
 
+		
+def generate_df_from_cv_preds_reg(ytrues, ypreds):
+
+	mae = []
+	mae_lci = []
+	mae_uci = []
+	mse = []
+	mse_lci = []
+	mse_uci = []
+	rmse = []
+	rmse_lci = []
+	rmse_uci = []
+
+	ytrues_str = []
+	ypreds_str = []
+
+	for cv_idx in range(len(ypreds)):
+		cv_ytrue = ytrues[cv_idx]
+		cv_ypred = ypreds[cv_idx]
+	
+		this_mae = mean_absolute_error(cv_ytrue, cv_ypred)
+		this_mse = mean_squared_error(cv_ytrue, cv_ypred)
+		this_rmse = mean_squared_error(cv_ytrue, cv_ypred, squared=False)
+
+		mae.append(this_mae)
+		mse.append(this_mse)
+		rmse.append(this_rmse)
+
+		ytrues_str.append(','.join([str(v) for v in cv_ytrue]))
+		ypreds_str.append(','.join([str(v) for v in cv_ypred]))
+
+	basic_stats_df = pd.DataFrame({
+		'mae': mae, 
+		'mse': mse, 
+		'rmse': rmse, 
+		'ytrues': ytrues_str, 
+		'ypreds': ypreds_str
+	})
+
+	return basic_stats_df
+
 
 def calc_stats_from_cv(model, X, y, cv, thres):
 	positive_class_idx = list(model.classes_).index(1)
@@ -100,11 +144,38 @@ def calc_stats_from_cv(model, X, y, cv, thres):
 	return basic_stats_df
 
 
+def calc_stats_from_cv_reg(model, X, y, cv):
+	ytrues = []
+	ypreds = []
+	for train_idx, test_idx in cv.split(X, y):
+		X_train, X_test = X[train_idx], X[test_idx]
+		y_train, y_test = y[train_idx], y[test_idx]
+
+		model.fit(X_train, y_train)
+		ytrues.append(y_test.flatten())
+		ypreds.append(model.predict(X_test).flatten())
+
+	if 'LeaveOneOut' in str(cv):
+		ytrues = [np.array(ytrues).flatten()]
+		ypreds = [np.array(ypreds).flatten()]
+	basic_stats_df = generate_df_from_cv_preds_reg(ytrues, ypreds)
+	return basic_stats_df
+
+
+
+
 def calc_stats_per_feature(model, X, y, cv, thres):
 	results = []
 	for i in range(X.shape[1]):
 		X_i = X[:,i].reshape(-1, 1)
 		results.append(calc_stats_from_cv(model, X_i, y, cv, thres))
+	return results
+
+def calc_stats_per_feature_reg(model, X, y, cv):
+	results = []
+	for i in range(X.shape[1]):
+		X_i = X[:,i].reshape(-1, 1)
+		results.append(calc_stats_from_cv_reg(model, X_i, y, cv))
 	return results
 
 

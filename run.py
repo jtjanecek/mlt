@@ -12,6 +12,7 @@ import os
 import argparse
 
 from models.classifier import Classifier
+from models.regressor import Regressor
 from models.profiler import Profiler
 
 parser = argparse.ArgumentParser(description='MLT')
@@ -23,7 +24,7 @@ parser.add_argument('--timeout', help='Timeout for AutoML fitting in minutes', d
 parser.add_argument('--name', help='Name of the model to use as prefixes', default=None)
 parser.add_argument('--random_state', help='Random state for reproducibility', default=50)
 parser.add_argument('--n_cores', help='Number of CPUs to use. Use -1 for all cores', default=1)
-parser.add_argument('--cv', help='Cross validation metric to use. Default=LeaveOneOut', choices=['LeaveOneOut','StratifiedKFold'], default="LeaveOneOut")
+parser.add_argument('--cv', help='Cross validation metric to use. Default=LeaveOneOut', choices=['LeaveOneOut','StratifiedKFold','KFold'], default="LeaveOneOut")
 parser.add_argument('--cv_splits', help='Number of splits for the CV to use. Not used for LOO CV. Default=5', default=5)
 parser.add_argument('--decision_thres', help='The decision threshold to use for calculating statistics (not AUC). Default=0.5', default=0.5)
 
@@ -64,4 +65,7 @@ if not numeric_check:
 if cli_args.type == 'c':
 	Classifier(name, df, cli_args.outcome, cli_args.timeout, cli_args.random_state, cli_args.n_cores, cli_args.cv, cli_args.cv_splits, cli_args.decision_thres)
 else:
-	assert 1 == 0
+	Regressor(name, df, cli_args.outcome, cli_args.timeout, cli_args.random_state, cli_args.n_cores, cli_args.cv, cli_args.cv_splits)
+
+
+
