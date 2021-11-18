@@ -11,6 +11,7 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import roc_curve, auc, classification_report
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import r2_score
 
 
 import pandas as pd
@@ -87,14 +88,9 @@ def generate_df_from_cv_preds(ytrues, ypreds, thres):
 def generate_df_from_cv_preds_reg(ytrues, ypreds):
 
 	mae = []
-	mae_lci = []
-	mae_uci = []
 	mse = []
-	mse_lci = []
-	mse_uci = []
 	rmse = []
-	rmse_lci = []
-	rmse_uci = []
+	r2 = []
 
 	ytrues_str = []
 	ypreds_str = []
@@ -106,10 +102,12 @@ def generate_df_from_cv_preds_reg(ytrues, ypreds):
 		this_mae = mean_absolute_error(cv_ytrue, cv_ypred)
 		this_mse = mean_squared_error(cv_ytrue, cv_ypred)
 		this_rmse = mean_squared_error(cv_ytrue, cv_ypred, squared=False)
-
+		this_r2 = r2_score(cv_ytrue, cv_ypred) 
+		
 		mae.append(this_mae)
 		mse.append(this_mse)
 		rmse.append(this_rmse)
+		r2.append(this_r2)
 
 		ytrues_str.append(','.join([str(v) for v in cv_ytrue]))
 		ypreds_str.append(','.join([str(v) for v in cv_ypred]))
@@ -118,6 +116,7 @@ def generate_df_from_cv_preds_reg(ytrues, ypreds):
 		'mae': mae, 
 		'mse': mse, 
 		'rmse': rmse, 
+		'r2': r2,
 		'ytrues': ytrues_str, 
 		'ypreds': ypreds_str
 	})
