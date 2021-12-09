@@ -12,6 +12,7 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import roc_curve, auc, classification_report
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.metrics import r2_score
+from sklearn.metrics import f1_score
 
 
 import pandas as pd
@@ -26,6 +27,17 @@ mpl.rcParams['figure.dpi'] = 150
 #matplotlib.rc('font', **font)
 mpl.rcParams.update({'font.size': 5})
 
+def calc_tp(ytrue, ypred):
+	return ((ytrue == ypred) & (ytrue == 1)).sum()
+
+def calc_tn(ytrue, ypred):
+	return ((ytrue == ypred) & (ytrue == 0)).sum()
+
+def calc_fp(ytrue, ypred):
+	return ((ytrue != ypred) & (ytrue == 1)).sum()
+
+def calc_fn(ytrue, ypred):
+	return ((ytrue != ypred) & (ytrue == 0)).sum()
 
 def calc_permutation_importance_training(model, X, y, n_cores, n_repeats, random_state, columns):
 	pi = permutation_importance(model, X, y, n_jobs=n_cores, n_repeats=n_repeats, random_state=random_state)
@@ -42,6 +54,7 @@ def generate_df_from_cv_preds(ytrues, ypreds, thres):
 	aucs = []
 	precisions = []
 	recalls = []
+	f1_scores = []
 
 	ytrues_str = []
 	ypreds_str = []
@@ -51,10 +64,22 @@ def generate_df_from_cv_preds(ytrues, ypreds, thres):
 		cv_ypred = ypreds[cv_idx]
 
 		ypred_binary = [0 if z < thres else 1 for z in cv_ypred]
-		tn, fp, fn, tp = confusion_matrix(cv_ytrue, ypred_binary).ravel()
+
+		cv_ytrue = np.array(cv_ytrue).flatten()
+		ypred_binary = np.array(ypred_binary).flatten()
+
+		tp = calc_tp(cv_ytrue, ypred_binary)
+		tn = calc_tn(cv_ytrue, ypred_binary)
+		fp = calc_fp(cv_ytrue, ypred_binary)
+		fn = calc_fn(cv_ytrue, ypred_binary)
+	
+		#tn, fp, fn, tp = confusion_matrix(cv_ytrue, ypred_binary).ravel()
 		auc = roc_auc_score(cv_ytrue, cv_ypred)
+
 		precision = precision_score(cv_ytrue, ypred_binary)
 		recall = recall_score(cv_ytrue, ypred_binary)
+
+		f1 = f1_score(cv_ytrue, ypred_binary)
 
 		tns.append(tn)
 		fps.append(fp)
@@ -63,10 +88,12 @@ def generate_df_from_cv_preds(ytrues, ypreds, thres):
 		aucs.append(auc)
 		precisions.append(precision)
 		recalls.append(recall)
+		f1_scores.append(f1)
+
 		ytrues_str.append(','.join([str(v) for v in cv_ytrue]))
 		ypreds_str.append(','.join([str(v) for v in cv_ypred]))
 
-	basic_stats_df = pd.DataFrame({'decision_threshold': [thres]*len(aucs), 'tn': tns, 'fp': fps, 'fn': fns, 'tp': tps, 'roc_auc': aucs, 'precision': precisions, 'recall': recalls, 'ytrues': ytrues_str, 'ypreds': ypreds_str})
+	basic_stats_df = pd.DataFrame({'decision_threshold': [thres]*len(aucs), 'tn': tns, 'fp': fps, 'fn': fns, 'tp': tps, 'roc_auc': aucs, 'precision': precisions, 'recall': recalls, 'ytrues': ytrues_str, 'ypreds': ypreds_str, 'f1_score': f1_scores})
 
 	basic_stats_df['ACC'] = (basic_stats_df['tn'] + basic_stats_df['tp']) / (basic_stats_df['tn'] + basic_stats_df['tp'] + basic_stats_df['fn'] + basic_stats_df['fp'])
 	basic_stats_df['Sensitivity'] = (basic_stats_df['tp']) / (basic_stats_df['tp'] + basic_stats_df['fn'])

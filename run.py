@@ -63,7 +63,7 @@ if not numeric_check:
 #Profiler(name, df)
 	
 if cli_args.type == 'c':
-	Classifier(name, df, cli_args.outcome, cli_args.timeout, cli_args.random_state, cli_args.n_cores, cli_args.cv, cli_args.cv_splits, cli_args.decision_thres)
+	Classifier(name, df, cli_args.outcome, cli_args.timeout, cli_args.random_state, cli_args.n_cores, cli_args.cv, cli_args.cv_splits, float(cli_args.decision_thres))
 else:
 	Regressor(name, df, cli_args.outcome, cli_args.timeout, cli_args.random_state, cli_args.n_cores, cli_args.cv, cli_args.cv_splits)
 
