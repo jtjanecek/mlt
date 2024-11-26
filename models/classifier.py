@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import LeaveOneOut, StratifiedKFold, KFold
 
-
+import random
 from scipy.stats import zscore
 
 import numpy as np
@@ -24,13 +24,15 @@ mpl.rcParams.update({'font.size': 5})
 
 
 class Classifier:
-	def __init__(self, name, df, outcome, timeout, random_state, n_cores, cv, n_splits, decision_thres):
+	def __init__(self, name, df, outcome, timeout, random_state, n_cores, cv, n_splits, decision_thres, n_bootstraps, bootstrap_sampling_rate):
 		self._name = name
 		self._outcome = outcome
 		self._timeout = timeout
 		self._n_cores = n_cores
 		self._random_state = random_state
 		self._thres = decision_thres
+		self._n_bootstraps = n_bootstraps
+		self._bootstrap_sampling_rate = bootstrap_sampling_rate
 
 		if cv != 'LeaveOneOut':
 			self._cv = eval(f"{cv}(shuffle=True,n_splits={n_splits},random_state={random_state})")
@@ -123,6 +125,27 @@ class Classifier:
 		master_stats = pd.DataFrame(self._master_stats).T
 		master_stats = master_stats.sort_values(by=['roc_auc_mean'],ascending=False)
 		master_stats.to_csv(f'{self._name}_all_model_stats.csv')
-				
+		
 
+		logger.info("Running Bootstraps ...")
 
+		n_to_sample = int(self._X.shape[0] * self._bootstrap_sampling_rate)
+
+		all_bootstrap_results = []
+
+		for i in range(self._n_bootstraps):
+			# Get a subset of X and y with replacement
+			idxes = random.sample(range(self._X.shape[0]), n_to_sample)
+
+			X = self._X[idxes, :]
+			y = self._y[idxes]
+
+			self._rf.fit(self._X,self._y)
+			rf_stats_bootstrap = calc_stats_from_cv(self._rf, X, y, self._cv, self._thres)
+
+			all_bootstrap_results.append(rf_stats_bootstrap)
+
+		bootstrap_df = pd.concat(all_bootstrap_results)
+
+		bootstrap_df.to_csv(f'{self._name}_rf_bootstrap_cv_stats.csv', index=False)
+		plot_roc_auc(bootstrap_df, f'{self._name}_rf_bootstrap_roc_auc')
