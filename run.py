@@ -13,7 +13,10 @@ import argparse
 
 from models.classifier import Classifier
 from models.regressor import Regressor
-from models.profiler import Profiler
+#from models.profiler import Profiler
+
+import warnings
+warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser(description='MLT')
 parser.add_argument('--type', help='Classification or regression', choices=['c','r'], required=True)
@@ -27,7 +30,7 @@ parser.add_argument('--n_cores', help='Number of CPUs to use. Use -1 for all cor
 parser.add_argument('--cv', help='Cross validation metric to use. Default=LeaveOneOut', choices=['LeaveOneOut','StratifiedKFold','KFold'], default="LeaveOneOut")
 parser.add_argument('--cv_splits', help='Number of splits for the CV to use. Not used for LOO CV. Default=5', default=5)
 parser.add_argument('--decision_thres', help='The decision threshold to use for calculating statistics (not AUC). Default=0.5', default=0.5)
-parser.add_argument('--n_bootstraps', help='The number of bootstraps to perform. Default=100', default=100)
+parser.add_argument('--n_bootstraps', help='The number of bootstraps to perform. Default=-1. If -1, then don\'t run bootstraps', default=-1)
 parser.add_argument('--bootstrap_sampling_rate', help='The number of bootstraps to perform. Default=0.8', default=0.8)
 
 

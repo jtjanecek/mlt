@@ -1,6 +1,8 @@
 import os
 os.environ["OPENBLAS_NUM_THREADS"] = "8"
 
+from tqdm import tqdm
+
 import logging
 logger = logging.getLogger('mlt.classifier')
 
@@ -103,7 +105,8 @@ class Classifier:
 		## Single feature per model
 		logger.info("Running individual feature models ...")
 		rf_singles = calc_stats_per_feature(self._rf, self._X, self._y, self._cv, self._thres)
-		for i, column in enumerate(self._columns):
+		for i in tqdm(range(len((self._columns))), desc="Plotting rf individual feature models ..."):
+			column = self._columns[i]
 			rf_singles[i].to_csv(f'{self._name}_rf___stats_{column}.csv')
 			plot_roc_auc(rf_singles[i], f'{self._name}_rf___stats_{column}_roc_auc')
 			m, l_ci, h_ci = mean_confidence_interval(rf_singles[i]['roc_auc'])
@@ -112,7 +115,8 @@ class Classifier:
 			self._master_stats[f'rf_{column}']['roc_auc_h_ci'] = h_ci
 
 		lg_singles = calc_stats_per_feature(self._lg, self._X_z, self._y, self._cv, self._thres)
-		for i, column in enumerate(self._columns):
+		for i in tqdm(range(len((self._columns))), desc="Plotting lg individual feature models ..."):
+			column = self._columns[i]
 			lg_singles[i].to_csv(f'{self._name}_lg___stats_{column}.csv')
 			plot_roc_auc(lg_singles[i], f'{self._name}_lg___stats_{column}_roc_auc')
 			m, l_ci, h_ci = mean_confidence_interval(lg_singles[i]['roc_auc'])
@@ -127,25 +131,27 @@ class Classifier:
 		master_stats.to_csv(f'{self._name}_all_model_stats.csv')
 		
 
-		logger.info("Running Bootstraps ...")
 
-		n_to_sample = int(self._X.shape[0] * self._bootstrap_sampling_rate)
+		if self._n_bootstraps != -1:
+			logger.info("Running Bootstraps ...")
 
-		all_bootstrap_results = []
+			n_to_sample = int(self._X.shape[0] * self._bootstrap_sampling_rate)
 
-		for i in range(self._n_bootstraps):
-			# Get a subset of X and y with replacement
-			idxes = random.sample(range(self._X.shape[0]), n_to_sample)
+			all_bootstrap_results = []
 
-			X = self._X[idxes, :]
-			y = self._y[idxes]
+			for i in tqdm(range(self._n_bootstraps), desc="Executing bootstraps ..."):
+				# Get a subset of X and y with replacement
+				idxes = random.sample(range(self._X.shape[0]), n_to_sample)
 
-			self._rf.fit(self._X,self._y)
-			rf_stats_bootstrap = calc_stats_from_cv(self._rf, X, y, self._cv, self._thres)
+				X = self._X[idxes, :]
+				y = self._y[idxes]
 
-			all_bootstrap_results.append(rf_stats_bootstrap)
+				self._rf.fit(self._X,self._y)
+				rf_stats_bootstrap = calc_stats_from_cv(self._rf, X, y, self._cv, self._thres)
 
-		bootstrap_df = pd.concat(all_bootstrap_results)
+				all_bootstrap_results.append(rf_stats_bootstrap)
 
-		bootstrap_df.to_csv(f'{self._name}_rf_bootstrap_cv_stats.csv', index=False)
-		plot_roc_auc(bootstrap_df, f'{self._name}_rf_bootstrap_roc_auc')
+			bootstrap_df = pd.concat(all_bootstrap_results)
+
+			bootstrap_df.to_csv(f'{self._name}_rf_bootstrap_cv_stats.csv', index=False)
+			plot_roc_auc(bootstrap_df, f'{self._name}_rf_bootstrap_roc_auc')

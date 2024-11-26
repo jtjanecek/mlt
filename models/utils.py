@@ -1,5 +1,8 @@
 import scipy
-
+import warnings
+from tqdm import tqdm
+import sys
+import os
 import numpy as np
 from numpy import interp
 
@@ -192,14 +195,14 @@ def calc_stats_from_cv_reg(model, X, y, cv):
 
 def calc_stats_per_feature(model, X, y, cv, thres):
 	results = []
-	for i in range(X.shape[1]):
+	for i in tqdm(range(X.shape[1]), desc="Running calc_stats_per_feature ..."):
 		X_i = X[:,i].reshape(-1, 1)
 		results.append(calc_stats_from_cv(model, X_i, y, cv, thres))
 	return results
 
 def calc_stats_per_feature_reg(model, X, y, cv):
 	results = []
-	for i in range(X.shape[1]):
+	for i in tqdm(range(X.shape[1]), desc="Running calc_stats_per_feature_reg ..."):
 		X_i = X[:,i].reshape(-1, 1)
 		results.append(calc_stats_from_cv_reg(model, X_i, y, cv))
 	return results
@@ -222,7 +225,7 @@ def plot_importance(columns, importance, path):
 	fig, ax = plt.subplots()
 	y_pos = np.arange(len(feature_labels))
 
-	ax.barh(y_pos, feature_importance.astype(float), tick_label=feature_labels,align='center')
+	ax.barh(y_pos, feature_importance.astype(float), tick_label=feature_labels,align='center', alpha=1.0)
 	#ax.set_yticks(y_pos)
 	#ax.set_yticklabels(feature_labels)
 	ax.invert_yaxis()
@@ -256,31 +259,37 @@ def plot_roc_auc(df, path):
 	mean_auc = np.mean(aucs)
 	std_auc = np.std(aucs)
 
-	plt.figure()
-	plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='Chance', alpha=.8)
+	for chance_alpha, sd_alpha, format in ([1.0, 1.0, 'eps'], [.8, .2, 'png']):
+		plt.figure()
+		plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='Chance', alpha=chance_alpha)
 
-	plt.plot(mean_fpr, mean_tpr, color='b',
-		 label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
-		 lw=2, alpha=.8)
+		plt.plot(mean_fpr, mean_tpr, color='b',
+			label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
+			lw=2, alpha=chance_alpha)
 
-	if df.shape[0] != 1: # It's not LOO, so plot the shaded area
-		std_tpr = np.std(tprs, axis=0)
-		tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-		tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-		plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,
-				 label=r'$\pm$ SD')
+		if df.shape[0] != 1: # It's not LOO, so plot the shaded area
+			std_tpr = np.std(tprs, axis=0)
+			tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+			tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+			plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=sd_alpha,
+					label=r'$\pm$ SD')
 
-	plt.xlim([-0.05, 1.05])
-	plt.ylim([-0.05, 1.05])
-	plt.xlabel('False Positive Rate', fontsize=22)
-	plt.ylabel('True Positive Rate', fontsize=22)
-	plt.title('ROC', fontsize=22)
-	plt.legend(loc="lower right", prop={'size': 8})
-	plt.tick_params(axis='both', which='major', labelsize=16)
+		plt.xlim([-0.05, 1.05])
+		plt.ylim([-0.05, 1.05])
+		plt.xlabel('False Positive Rate', fontsize=22)
+		plt.ylabel('True Positive Rate', fontsize=22)
+		plt.title('ROC', fontsize=22)
+		plt.legend(loc="lower right", prop={'size': 8})
+		plt.tick_params(axis='both', which='major', labelsize=16)
 
-	plt.tight_layout()
-	plt.savefig(path+'.eps', format='eps')
-	plt.savefig(path+'.png', format='png')
-	plt.close()
+		plt.tight_layout()
+		old_stderr = sys.stderr
+		with open(os.devnull, 'w') as fnull:
+			sys.stderr = fnull  # Redirect stderr
+			try:
+				plt.savefig(path + f'.{format}', format=format)
+			finally:
+				sys.stderr = old_stderr  # Restore stderr
+		plt.close()
 
 
